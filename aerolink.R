@@ -25,20 +25,50 @@ fetch2011 <- read.table("aerolink_fetch_access_20102011.dat", sep = ',')
 fetch2012 <- read.table("aerolink_fetch_access_20112012.dat", sep = ',')
 fetch2013 <- read.table("aerolink_fetch_access_20122013.dat", sep = ',')
 fetch2014 <- read.table("aerolink_fetch_access_20132014.dat", sep = ',')
+
+fetch2010wh <- read.table("aerolink_fetch_access_wh_20092010.dat", header = T, sep=',')
+fetch2011wh <- read.table("aerolink_fetch_access_wh_20102011.dat", header = T, sep=',')
+fetch2012wh <- read.table("aerolink_fetch_access_wh_20112012.dat", header = T, sep=',')
+fetch2013wh <- read.table("aerolink_fetch_access_wh_20122013.dat", header = T, sep=',')
+fetch2014wh <- read.table("aerolink_fetch_access_wh_20132014.dat", header = T, sep=',')
+
 kerr_fetch_times <- read.table("stu_fetch_sorted.dat")
 dash_fetch_times <- read.table("dashofy_fetch_sort.dat")
 
 ######## AREA TO FIGURE OUT HOW TO PLOT FETCHES BY BADGE NUMBER ###############
+# Order badge numbers so that we can plot newest/oldest to oldest/newest employees
 arranged <- arrange(fetch,desc(Badge))
-head(arranged, n = 30L)
-tail(arranged, n = 30L)
-arranged[1:10,]
-rowsums <- rowSums(arranged[1:nrow(arranged),2:25])
+arranged2010 <- arrange(fetch2010wh,desc(Badge))
+arranged2011 <- arrange(fetch2011wh,desc(Badge))
+arranged2012 <- arrange(fetch2012wh,desc(Badge))
+arranged2013 <- arrange(fetch2013wh,desc(Badge))
+arranged2014 <- arrange(fetch2014wh,desc(Badge))
+
+##########  Compare badges for differences between years #############
+head(arranged2011, n = 30L)
+arranged2010[1:10,1]
+str(arranged2011[1:10, 1])
+
+rowsums2010 <- rowSums(arranged2010[1:nrow(arranged2010),2:25])
+rowsums2011 <- rowSums(arranged2011[1:nrow(arranged2011),2:25])
+rowsums2012 <- rowSums(arranged2012[1:nrow(arranged2012),2:25])
+rowsums2013 <- rowSums(arranged2013[1:nrow(arranged2013),2:25])
+rowsums2014 <- rowSums(arranged2014[1:nrow(arranged2014),2:25])
+
+par(mfrow=c(1,1))
+summary(rowsums2010[1:1000])
+summary(rowsums2011)
+summary(rowsums2012)
+summary(rowsums2013)
+
+boxplot(log10(rowsums2010))  ### do a box plot with a vertical rug
+log10(rowsums2010)
+
 par(mfrow=c(2,2))
-plot(rowsums, xlim = c(0,1000), ylim = c(0,10000))
-plot(rowsums, xlim = c(1000,2000), ylim = c(0,10000))
-plot(rowsums, xlim = c(2000,3000), ylim = c(0,10000))
-plot(rowsums, xlim = c(3000,4000), ylim = c(0,10000))
+plot(rowsums2010, xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2011, xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2012, xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2013, xlim = c(0,1000), ylim = c(0,8000))
 
 ########### Get differences between fetch times - any pattern?################
 kerr_fetch_times_diff <- diff(kerr_fetch_times$V1)

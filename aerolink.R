@@ -55,21 +55,33 @@ rowsums2012 <- rowSums(arranged2012[1:nrow(arranged2012),2:25])
 rowsums2013 <- rowSums(arranged2013[1:nrow(arranged2013),2:25])
 rowsums2014 <- rowSums(arranged2014[1:nrow(arranged2014),2:25])
 
+head(rowsums2010, n = 50L)
 par(mfrow=c(1,1))
 summary(rowsums2010[1:1000])
-summary(rowsums2011)
-summary(rowsums2012)
-summary(rowsums2013)
+summary(rowsums2011[1:1000])
+summary(rowsums2012[1:1000])
+summary(rowsums2013[1:1000])
 
-boxplot(log10(rowsums2010))  ### do a box plot with a vertical rug
+boxplot(log10(rowsums2010[1001:2000]))  ### do a box plot with a vertical rug
 log10(rowsums2010)
 
 par(mfrow=c(2,2))
-plot(rowsums2010, xlim = c(0,1000), ylim = c(0,8000))
-plot(rowsums2011, xlim = c(0,1000), ylim = c(0,8000))
-plot(rowsums2012, xlim = c(0,1000), ylim = c(0,8000))
-plot(rowsums2013, xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2010[1:1000], xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2011[1:1000], xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2012[1:1000], xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2013[1:1000], xlim = c(0,1000), ylim = c(0,8000))
 
+plot(rowsums2010[1001:2000], xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2011[1001:2000], xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2012[1001:2000], xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2013[1001:2000], xlim = c(0,1000), ylim = c(0,8000))
+
+plot(rowsums2010[2001:3000], xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2011[2001:3000], xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2012[2001:3000], xlim = c(0,1000), ylim = c(0,8000))
+plot(rowsums2013[2001:3000], xlim = c(0,1000), ylim = c(0,8000))
+
+rowsums2011[2001:3000]
 ########### Get differences between fetch times - any pattern?################
 kerr_fetch_times_diff <- diff(kerr_fetch_times$V1)
 dash_fetch_times_diff <- diff(dash_fetch_times$V1)

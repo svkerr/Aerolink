@@ -32,6 +32,13 @@ fetch2012wh <- read.table("aerolink_fetch_access_wh_20112012.dat", header = T, s
 fetch2013wh <- read.table("aerolink_fetch_access_wh_20122013.dat", header = T, sep=',')
 fetch2014wh <- read.table("aerolink_fetch_access_wh_20132014.dat", header = T, sep=',')
 
+## Investigate fft of a particular badge
+stu <- subset(fetch2012, V1 == 25876)
+stu_hrs <- stu[2:25]
+fft(stu_hrs)
+stu_hrs
+head(fetch2012)
+
 kerr_fetch_times <- read.table("stu_fetch_sorted.dat")
 dash_fetch_times <- read.table("dashofy_fetch_sort.dat")
 

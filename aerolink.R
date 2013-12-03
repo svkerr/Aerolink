@@ -10,6 +10,7 @@ library(psych)
 library(lsr)
 library(car)
 library(plyr)
+library(xts)
 
 # Badge References:
 Dashofy: 28006
@@ -32,15 +33,58 @@ fetch2012wh <- read.table("aerolink_fetch_access_wh_20112012.dat", header = T, s
 fetch2013wh <- read.table("aerolink_fetch_access_wh_20122013.dat", header = T, sep=',')
 fetch2014wh <- read.table("aerolink_fetch_access_wh_20132014.dat", header = T, sep=',')
 
-## Investigate fft of a particular badge
-stu <- subset(fetch2012, V1 == 25876)
-stu_hrs <- stu[2:25]
-fft(stu_hrs)
-stu_hrs
-head(fetch2012)
+#####Investigate dft and time series of a particular badge###################
+stu10 <- subset(fetch2010, V1 == 25876)
+stu11 <- subset(fetch2011, V1 == 25876)
+stu12 <- subset(fetch2012, V1 == 25876)
+stu13 <- subset(fetch2013, V1 == 25876)
 
+stu_hrs10 <- stu10[2:25]
+stu_hrs11 <- stu11[2:25]
+stu_hrs12 <- stu12[2:25]
+stu_hrs13 <- stu13[2:25]
+
+stu_hrs10_numeric <- as.numeric(stu_hrs10)
+stu_hrs11_numeric <- as.numeric(stu_hrs11)
+stu_hrs12_numeric <- as.numeric(stu_hrs12)
+stu_hrs13_numeric <- as.numeric(stu_hrs13)
+
+stu_hrs_df <- rbind(stu_hrs10,stu_hrs11, stu_hrs12, stu_hrs13)
+col_names <- c('h1','h2','h3','h4','h5','h6','h7','h8','h9','h10','h11','h12','h13','h14','h15','h16','h17','h18','h19','h20','h21','h22','h23','h24')
+colnames(stu_hrs_df) <- col_names
+rownames(stu_hrs_df) <- c('2010','2011','2012','2013')
+stu_hrs_df
+str(stu_hrs_df)
+#stu_hrs_tot <- rbind(stu_hrs10_numeric,stu_hrs11_numeric, stu_hrs12_numeric, stu_hrs13_numeric)
+#stu_mat <- as.matrix(stu_hrs_tot)
+
+stu_ts <- ts(stu_hrs_df,start = c(2010,1), end = c(2013,24),frequency = 24)
+stu_ts
+ts.plot(stu_ts)
+start(stu_ts)
+end(stu_ts)
+frequency(stu_ts)
+plot(stu_ts)
+
+
+
+stu_mat_ts_agg <- aggregate(stu_mat_ts)/24
+
+plot(abs(fft(stu_hrs_numeric)))
+plot( Im(fft(stu_hrs_numeric))/Re(fft(stu_hrs_numeric)) )
+
+
+str(stu_ts)
+plot(stu_ts)
+decompose(stu_ts)
 kerr_fetch_times <- read.table("stu_fetch_sorted.dat")
 dash_fetch_times <- read.table("dashofy_fetch_sort.dat")
+
+stu_mat <- as.matrix(stu_hrs)
+stu_mat
+fft(stu_mat)
+stu_mat_manual <- c(0,0,0,0,0,11,43,24,53,52,44,38,38,27,35,30,15,18,9,4,14,6,9,2)
+fft(stu_mat_manual)
 
 ######## AREA TO FIGURE OUT HOW TO PLOT FETCHES BY BADGE NUMBER ###############
 # Order badge numbers so that we can plot newest/oldest to oldest/newest employees

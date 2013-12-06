@@ -3,7 +3,6 @@ setwd("/Users/stuart/R_Files/Aerolink")
 tui <- read.csv("tui.csv", header=T, dec=",", sep=",")
 
 # Load required libraries
-stlibrary(xts)
 library(zoo)
 library(ggplot2)
 library(psych)
@@ -15,7 +14,7 @@ library(xts)
 # Badge References:
 Dashofy: 28006
 B. Wong: 21462
-R. Razouk: 19402
+Razouk: 19402
 
 ### Read in data files
 
@@ -33,7 +32,6 @@ fetch2012wh <- read.table("aerolink_fetch_access_wh_20112012.dat", header = T, s
 fetch2013wh <- read.table("aerolink_fetch_access_wh_20122013.dat", header = T, sep=',')
 fetch2014wh <- read.table("aerolink_fetch_access_wh_20132014.dat", header = T, sep=',')
 
-#####Investigate dft and time series of a particular badge###################
 stu10 <- subset(fetch2010, V1 == 25876)
 stu11 <- subset(fetch2011, V1 == 25876)
 stu12 <- subset(fetch2012, V1 == 25876)
@@ -49,6 +47,24 @@ stu_hrs11_numeric <- as.numeric(stu_hrs11)
 stu_hrs12_numeric <- as.numeric(stu_hrs12)
 stu_hrs13_numeric <- as.numeric(stu_hrs13)
 
+
+dash10 <- subset(fetch2010, V1 == 28006)
+dash11 <- subset(fetch2011, V1 == 28006)
+dash12 <- subset(fetch2012, V1 == 28006)
+dash13 <- subset(fetch2013, V1 == 28006)
+
+dash_hrs10 <- dash10[2:25]
+dash_hrs11 <- dash11[2:25]
+dash_hrs12 <- dash12[2:25]
+dash_hrs13 <- dash13[2:25]
+
+dash_hrs10_numeric <- as.numeric(dash_hrs10)
+dash_hrs11_numeric <- as.numeric(dash_hrs11)
+dash_hrs12_numeric <- as.numeric(dash_hrs12)
+dash_hrs13_numeric <- as.numeric(dash_hrs13)
+
+### TIME SERIES ######
+stu_hrs10_numeric_ts <- ts(stu_hrs10_numeric)
 stu_hrs_df <- rbind(stu_hrs10,stu_hrs11, stu_hrs12, stu_hrs13)
 col_names <- c('h1','h2','h3','h4','h5','h6','h7','h8','h9','h10','h11','h12','h13','h14','h15','h16','h17','h18','h19','h20','h21','h22','h23','h24')
 colnames(stu_hrs_df) <- col_names
@@ -65,26 +81,47 @@ start(stu_ts)
 end(stu_ts)
 frequency(stu_ts)
 plot(stu_ts)
-
-
-
-stu_mat_ts_agg <- aggregate(stu_mat_ts)/24
-
-plot(abs(fft(stu_hrs_numeric)))
-plot( Im(fft(stu_hrs_numeric))/Re(fft(stu_hrs_numeric)) )
-
-
-str(stu_ts)
-plot(stu_ts)
 decompose(stu_ts)
+
+
+### FOURIER ANALYSIS #################
+# How about doing a fft of the time diffs?
+# http://homepage.univie.ac.at/erhard.reschenhofer/pdf/zr/Spec.pdf
+
+#stu_mat_ts_agg <- aggregate(stu_mat_ts)/24
+
+plot(abs(fft(stu_hrs10_numeric)))
+plot( Im(fft(stu_hrs10_numeric))/Re(fft(stu_hrs10_numeric)) )
+stu_hrs10_numeric
+
+#### Estimate spectral density via a periodogram ##########
+
+# get data that contains fetch times
 kerr_fetch_times <- read.table("stu_fetch_sorted.dat")
 dash_fetch_times <- read.table("dashofy_fetch_sort.dat")
+kft <- kerr_fetch_times$V1
+eft <- dash_fetch_times$V1
+result <- head(kft) - head(eft)
+result
+# calculate time differences between fetches
+kerr_fetch_times_diff <- diff(kft)
+dash_fetch_times_diff <- diff(eft)
 
-stu_mat <- as.matrix(stu_hrs)
-stu_mat
-fft(stu_mat)
-stu_mat_manual <- c(0,0,0,0,0,11,43,24,53,52,44,38,38,27,35,30,15,18,9,4,14,6,9,2)
-fft(stu_mat_manual)
+par(mfrow=c(2,1))
+spectrum(kerr_fetch_times_diff, method = c('pgram'))
+spectrum(dash_fetch_times_diff, method = c('pgram'))
+
+par(mfrow=c(2,2))
+spectrum(stu_hrs10_numeric,method = c('pgram'))
+spectrum(stu_hrs11_numeric,method = c('pgram'))
+spectrum(stu_hrs12_numeric,method = c('pgram'))
+spectrum(stu_hrs13_numeric,method = c('pgram'))
+
+par(mfrow=c(2,2))
+spectrum(dash_hrs10_numeric,method = c('pgram'))
+spectrum(dash_hrs11_numeric,method = c('pgram'))
+spectrum(dash_hrs12_numeric,method = c('pgram'))
+spectrum(dash_hrs13_numeric,method = c('pgram'))
 
 ######## AREA TO FIGURE OUT HOW TO PLOT FETCHES BY BADGE NUMBER ###############
 # Order badge numbers so that we can plot newest/oldest to oldest/newest employees
@@ -106,7 +143,7 @@ rowsums2012 <- rowSums(arranged2012[1:nrow(arranged2012),2:25])
 rowsums2013 <- rowSums(arranged2013[1:nrow(arranged2013),2:25])
 rowsums2014 <- rowSums(arranged2014[1:nrow(arranged2014),2:25])
 
-head(rowsums2010, n = 50L)
+head(rowsums2013, n = 100L)
 par(mfrow=c(1,1))
 summary(rowsums2010[1:1000])
 summary(rowsums2011[1:1000])
@@ -134,19 +171,22 @@ plot(rowsums2013[2001:3000], xlim = c(0,1000), ylim = c(0,8000))
 
 rowsums2011[2001:3000]
 ########### Get differences between fetch times - any pattern?################
-kerr_fetch_times_diff <- diff(kerr_fetch_times$V1)
-dash_fetch_times_diff <- diff(dash_fetch_times$V1)
+EmpA_fetch_times_diff <- diff(kerr_fetch_times$V1)
+EmpB_fetch_times_diff <- diff(dash_fetch_times$V1)
 # Look at the files
 head(kerr_fetch_times_diff)
 str(kerr_fetch_times_diff)
-describe(kerr_fetch_times_diff)
-describe(dash_fetch_times_diff)
-# Plot time differences
-par(mfrow=c(1,2))
-plot(log10(kerr_fetch_times_diff), ylim = c(0,6))
-hist(log10(kerr_fetch_times_diff),freq=FALSE)
-hist(log10(dash_fetch_times_diff), ,ylim = c(0,800))
-hist(log10(dash_fetch_times_diff),freq=FALSE)
+describe(EmpA_fetch_times_diff)
+describe(EmpB_fetch_times_diff)
+
+# Plot time differences using histograms of density and actual numbers
+par(mfrow=c(2,1))
+hist(log10(EmpA_fetch_times_diff), ylim = c(0,800), xlim = c(0,7))
+hist(log10(EmpB_fetch_times_diff), ,ylim = c(0,800), xlim = c(0,7))
+
+par(mfrow=c(2,1))
+hist(log10(EmpA_fetch_times_diff),freq=FALSE, ylim = c(0,.4))
+hist(log10(EmpB_fetch_times_diff),freq=FALSE, ylim = c(0,0.4))
 
 # How many individual badges are we tracking?
 nrow(fetch2010)
@@ -225,31 +265,33 @@ hours2010_mat$'25876'
 ## create a dataframe for an individual user for years 2010-2013
 # rbind the years, transpose to get years as columns, then give columns names
 # Kerr and Dashofy
+# Because plots show "names" -- changing the badge tags of Dashofy and me to EmpA and EmpB respectively
 user25876 <- rbind(hours2010_mat$'25876',hours2011_mat$'25876',hours2012_mat$'25876',hours2013_mat$'25876')
-user25876_t <- data.frame(t(user25876))
-colnames(user25876_t) <- c(2010,2011,2012,2013)
+EmpA_t <- data.frame(t(user25876))
+colnames(EmpA_t) <- c(2010,2011,2012,2013)
 
 user28006 <- rbind(hours2010_mat$'28006',hours2011_mat$'28006',hours2012_mat$'28006',hours2013_mat$'28006')
-user28006_t <- data.frame(t(user28006))
-colnames(user28006_t) <- c(2010,2011,2012,2013)
+EmpB_t <- data.frame(t(user28006))
+colnames(EmpB_t) <- c(2010,2011,2012,2013)
 
 colSums(user25876_t)
-plot(colSums(user28006_t))
-plot(colSums(user25876_t))
+plot(colSums(EmpA_t))
+plot(colSums(EmpA_t))
 
 ###### ANALYSIS  ##################
 # Do a Dependent t-test (same person sampled during 2 different years)
 # Because t-test assumes "homogeniety of variance" - we must test for this
 
-var.test(user25876_t$'2012',user25876_t$'2013') 
+var.test(EmpA_t$'2012',EmpA_t$'2013') 
 
 # Since p-value is large, i can assume that homogeniety of variance is valid and hence i can use t-test.
 # Note: If i find that homogeniety of variance is not there, I would use a Welch two sample test
 # Note: When performing > 2 dependent t-test, use "Repeated ANOVA"
 
-t.test(user25876_t$'2012',user25876_t$'2013', paired=T)
-t.test(user25876_t$'2012',user25876_t$'2013', alternative="less")
-t.test(user28006_t$'2010',user28006_t$'2012', paired=T)
+t.test(EmpA_t$'2010',EmpA_t$'2011', paired=T)
+t.test(EmpA_t$'2011',EmpA_t$'2012', paired=T)
+t.test(EmpA_t$'2012',EmpA_t$'2013', paired=T)
+
 
 
 # NOTE: There exists a significant difference between 2012 and 2013, but not between other years

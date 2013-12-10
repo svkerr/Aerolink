@@ -1,6 +1,6 @@
 # Set working directory
 setwd("/Users/stuart/R_Files/Aerolink")
-tui <- read.csv("tui.csv", header=T, dec=",", sep=",")
+
 
 # Load required libraries
 library(zoo)
@@ -31,6 +31,9 @@ fetch2011wh <- read.table("aerolink_fetch_access_wh_20102011.dat", header = T, s
 fetch2012wh <- read.table("aerolink_fetch_access_wh_20112012.dat", header = T, sep=',')
 fetch2013wh <- read.table("aerolink_fetch_access_wh_20122013.dat", header = T, sep=',')
 fetch2014wh <- read.table("aerolink_fetch_access_wh_20132014.dat", header = T, sep=',')
+
+# over the web interface:
+x <- read.table("http://tcsnc3:8080/yearly/2010/25876",header=FALSE,sep=",")
 
 stu10 <- subset(fetch2010, V1 == 25876)
 stu11 <- subset(fetch2011, V1 == 25876)
@@ -122,6 +125,38 @@ spectrum(dash_hrs10_numeric,method = c('pgram'))
 spectrum(dash_hrs11_numeric,method = c('pgram'))
 spectrum(dash_hrs12_numeric,method = c('pgram'))
 spectrum(dash_hrs13_numeric,method = c('pgram'))
+############################################################################################
+ # Let's do spectrum on all 4 years of hourly fetch data
+EmpA_all <- c(stu_hrs10_numeric, stu_hrs11_numeric, stu_hrs12_numeric,stu_hrs13_numeric)
+EmpB_all <- c(dash_hrs10_numeric, dash_hrs11_numeric, dash_hrs12_numeric,dash_hrs13_numeric)
+
+par(mfrow=c(2,1))
+plot(EmpA_all,type="l", main = "Aggregate Hourly Fetches for 4 Years")
+spectrum(EmpA_all, spans = c(3,3))
+
+plot(EmpB_all,type="l", main = "Aggregate Hourly Fetches for 4 Years")
+spectrum(EmpB_all, spans = c(3,3))
+
+spectrum(EmpA_all)
+spectrum(EmpA_all, spans = c(3,3))
+
+#############################################################################################
+# Let's do spectrum on only a 24 hour time period, but the hourly stacked (summed) for 4 years
+stu_rbind <- rbind(stu_hrs10,stu_hrs11,stu_hrs12,stu_hrs13)
+EmpA_rbind_summed <- as.numeric(colSums(stu_rbind))
+
+par(mfrow=c(2,1))
+plot(EmpA_rbind_summed, type='l', main = "Aggregate Fetches per hour for 4 Years", ylab = c('EmpA Fetches'), xlab = c('24 hours'),ylim=c(0,700))
+spectrum(EmpA_rbind_summed, method=c("pgram"))
+
+dash_rbind <- rbind(dash_hrs10, dash_hrs11, dash_hrs12, dash_hrs13)
+EmpB_rbind_summed <- as.numeric(colSums(dash_rbind))
+
+par(mfrow=c(2,1))
+plot(EmpB_rbind_summed, type='l', main = "Aggregate Fetches per hour for 4 Years", ylab = c('EmpB Fetches'), xlab = c('24 hours'), ylim=c(0,700))
+spectrum(EmpB_rbind_summed, method = c('pgram'))
+
+plot(stu_hrs10)
 
 ######## AREA TO FIGURE OUT HOW TO PLOT FETCHES BY BADGE NUMBER ###############
 # Order badge numbers so that we can plot newest/oldest to oldest/newest employees
@@ -237,9 +272,6 @@ colnames(hours2012_rb) <- hours2012_rb[1,]
 colnames(hours2013_rb) <- hours2013_rb[1,]
 colnames(hours2014_rb) <- hours2014_rb[1,]
 
-
-str(hours_wb)  # Here notice that even though we made badges the column names, it retains one copy as data
-hours_wb[1,]
 # so remove first row of integer badge numbers, and we're done 
 hours_mat <- hours_wb[-1,]
 str(hours_mat)
@@ -278,12 +310,12 @@ colSums(user25876_t)
 plot(colSums(EmpA_t))
 plot(colSums(EmpA_t))
 
-###### ANALYSIS  ##################
+###### ANALYSIS  t-test and Wilcoxon  ################################################
 # Do a Dependent t-test (same person sampled during 2 different years)
 # Because t-test assumes "homogeniety of variance" - we must test for this
 
 var.test(EmpA_t$'2012',EmpA_t$'2013') 
-
+EmpA_t
 # Since p-value is large, i can assume that homogeniety of variance is valid and hence i can use t-test.
 # Note: If i find that homogeniety of variance is not there, I would use a Welch two sample test
 # Note: When performing > 2 dependent t-test, use "Repeated ANOVA"
@@ -293,6 +325,17 @@ t.test(EmpA_t$'2011',EmpA_t$'2012', paired=T)
 t.test(EmpA_t$'2012',EmpA_t$'2013', paired=T)
 
 
+# But wait, the distributions are not normal, hence i should defer to Wilcoxon
+wilcox.test(EmpA_t$'2010',EmpA_t$'2011', paired = T)
+wilcox.test(EmpA_t$'2011',EmpA_t$'2012', paired = T)
+wilcox.test(EmpA_t$'2012',EmpA_t$'2013', paired = T)
+############################################# WORK HERE ##########################
+# Let's do plots to support the above wilcoxan tests
+par(mfrow = c(2,2))
+plot(as.numeric(stu_hrs10),type='l')
+plot(as.numeric(stu_hrs11),type='l')
+plot(as.numeric(stu_hrs12),type='l')
+plot(as.numeric(stu_hrs13),type='l')
 
 # NOTE: There exists a significant difference between 2012 and 2013, but not between other years
 

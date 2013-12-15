@@ -1,6 +1,5 @@
-# Set working directory
+# Set local working directory
 setwd("/Users/stuart/R_Files/Aerolink")
-
 
 # Load required libraries
 library(zoo)
@@ -16,7 +15,7 @@ Dashofy: 28006
 B. Wong: 21462
 Razouk: 19402
 
-### Read in data files
+### Read in data files (prefer to have all reads from external files here)
 
 fetch <- read.table("aerolink_fetch_multi.dat", header = T, sep=',')
 fetch2 <- read.table("aerolink_fetch_multi_noheads.dat", sep = ',')
@@ -32,8 +31,14 @@ fetch2012wh <- read.table("aerolink_fetch_access_wh_20112012.dat", header = T, s
 fetch2013wh <- read.table("aerolink_fetch_access_wh_20122013.dat", header = T, sep=',')
 fetch2014wh <- read.table("aerolink_fetch_access_wh_20132014.dat", header = T, sep=',')
 
-# over the web interface:
+kerr_fetch_times <- read.table("stu_fetch_sorted.dat")
+dash_fetch_times <- read.table("dashofy_fetch_sort.dat")
+
+# Example of reading data over the web interface:
 x <- read.table("http://tcsnc3:8080/yearly/2010/25876",header=FALSE,sep=",")
+
+### Transformations and subsets of the above datasets required to do all 
+### analysis in this file
 
 stu10 <- subset(fetch2010, V1 == 25876)
 stu11 <- subset(fetch2011, V1 == 25876)
@@ -66,7 +71,16 @@ dash_hrs11_numeric <- as.numeric(dash_hrs11)
 dash_hrs12_numeric <- as.numeric(dash_hrs12)
 dash_hrs13_numeric <- as.numeric(dash_hrs13)
 
-### TIME SERIES ######
+# Capture the badges to be used later as column names
+badges <- fetch2$V1
+badges2010 <- fetch2010$V1
+badges2011 <- fetch2011$V1
+badges2012 <- fetch2012$V1
+badges2013 <- fetch2013$V1
+badges2014 <- fetch2014$V1
+
+### TIME SERIES ###########
+
 stu_hrs10_numeric_ts <- ts(stu_hrs10_numeric)
 stu_hrs_df <- rbind(stu_hrs10,stu_hrs11, stu_hrs12, stu_hrs13)
 col_names <- c('h1','h2','h3','h4','h5','h6','h7','h8','h9','h10','h11','h12','h13','h14','h15','h16','h17','h18','h19','h20','h21','h22','h23','h24')
@@ -88,8 +102,8 @@ decompose(stu_ts)
 
 
 ### FOURIER ANALYSIS #################
-# How about doing a fft of the time diffs?
-# http://homepage.univie.ac.at/erhard.reschenhofer/pdf/zr/Spec.pdf
+# Let's try FFT of a) fetches and b) the time differences between fetches
+# Reference: http://homepage.univie.ac.at/erhard.reschenhofer/pdf/zr/Spec.pdf
 
 #stu_mat_ts_agg <- aggregate(stu_mat_ts)/24
 
@@ -100,12 +114,11 @@ stu_hrs10_numeric
 #### Estimate spectral density via a periodogram ##########
 
 # get data that contains fetch times
-kerr_fetch_times <- read.table("stu_fetch_sorted.dat")
-dash_fetch_times <- read.table("dashofy_fetch_sort.dat")
+
 kft <- kerr_fetch_times$V1
 eft <- dash_fetch_times$V1
 result <- head(kft) - head(eft)
-result
+
 # calculate time differences between fetches
 kerr_fetch_times_diff <- diff(kft)
 dash_fetch_times_diff <- diff(eft)
@@ -126,7 +139,7 @@ spectrum(dash_hrs11_numeric,method = c('pgram'))
 spectrum(dash_hrs12_numeric,method = c('pgram'))
 spectrum(dash_hrs13_numeric,method = c('pgram'))
 ############################################################################################
- # Let's do spectrum on all 4 years of hourly fetch data
+ # Let's do spectrum on all 4 sequential years of hourly fetch data 
 EmpA_all <- c(stu_hrs10_numeric, stu_hrs11_numeric, stu_hrs12_numeric,stu_hrs13_numeric)
 EmpB_all <- c(dash_hrs10_numeric, dash_hrs11_numeric, dash_hrs12_numeric,dash_hrs13_numeric)
 
@@ -141,7 +154,7 @@ spectrum(EmpA_all)
 spectrum(EmpA_all, spans = c(3,3))
 
 #############################################################################################
-# Let's do spectrum on only a 24 hour time period, but the hourly stacked (summed) for 4 years
+# Let's do spectrum on 24 hour time period, where 4 years of hourly stacked fetches are stacked
 stu_rbind <- rbind(stu_hrs10,stu_hrs11,stu_hrs12,stu_hrs13)
 EmpA_rbind_summed <- as.numeric(colSums(stu_rbind))
 
@@ -155,8 +168,6 @@ EmpB_rbind_summed <- as.numeric(colSums(dash_rbind))
 par(mfrow=c(2,1))
 plot(EmpB_rbind_summed, type='l', main = "Aggregate Fetches per hour for 4 Years", ylab = c('EmpB Fetches'), xlab = c('24 hours'), ylim=c(0,700))
 spectrum(EmpB_rbind_summed, method = c('pgram'))
-
-plot(stu_hrs10)
 
 ######## AREA TO FIGURE OUT HOW TO PLOT FETCHES BY BADGE NUMBER ###############
 # Order badge numbers so that we can plot newest/oldest to oldest/newest employees
@@ -226,15 +237,6 @@ hist(log10(EmpB_fetch_times_diff),freq=FALSE, ylim = c(0,0.4))
 # How many individual badges are we tracking?
 nrow(fetch2010)
 
-# Capture the badges to be used later as column names
-badges <- fetch2$V1
-badges2010 <- fetch2010$V1
-badges2011 <- fetch2011$V1
-badges2012 <- fetch2012$V1
-badges2013 <- fetch2013$V1
-badges2014 <- fetch2014$V1
-
-sort(badges2010)
 ### Now get numerical matrix, remove badges and transpose
 hours <- subset(fetch2,select = c(V2:V25) )
 
@@ -297,7 +299,8 @@ hours2010_mat$'25876'
 ## create a dataframe for an individual user for years 2010-2013
 # rbind the years, transpose to get years as columns, then give columns names
 # Kerr and Dashofy
-# Because plots show "names" -- changing the badge tags of Dashofy and me to EmpA and EmpB respectively
+# Because plots show "names" -- changing the badge tags of Kerr and Dashofy to EmpA and EmpB respectively
+
 user25876 <- rbind(hours2010_mat$'25876',hours2011_mat$'25876',hours2012_mat$'25876',hours2013_mat$'25876')
 EmpA_t <- data.frame(t(user25876))
 colnames(EmpA_t) <- c(2010,2011,2012,2013)
@@ -310,38 +313,41 @@ colSums(user25876_t)
 plot(colSums(EmpA_t))
 plot(colSums(EmpA_t))
 
-###### ANALYSIS  t-test and Wilcoxon  ################################################
-# Do a Dependent t-test (same person sampled during 2 different years)
+###### ANALYSIS:  t-test and Wilcoxon  ################################################
+# Do a Dependent t-test (same person sampled during 2 sequential years)
 # Because t-test assumes "homogeniety of variance" - we must test for this
 
 var.test(EmpA_t$'2012',EmpA_t$'2013') 
-EmpA_t
-# Since p-value is large, i can assume that homogeniety of variance is valid and hence i can use t-test.
-# Note: If i find that homogeniety of variance is not there, I would use a Welch two sample test
+
+# Since p-value is large, i can assume that homogeniety of variance is valid thus proceed with t-test.
+# Note: If homogeniety of variance does not exist, use a Welch two sample test
 # Note: When performing > 2 dependent t-test, use "Repeated ANOVA"
 
 t.test(EmpA_t$'2010',EmpA_t$'2011', paired=T)
 t.test(EmpA_t$'2011',EmpA_t$'2012', paired=T)
 t.test(EmpA_t$'2012',EmpA_t$'2013', paired=T)
 
-
 # But wait, the distributions are not normal, hence i should defer to Wilcoxon
+
 wilcox.test(EmpA_t$'2010',EmpA_t$'2011', paired = T)
 wilcox.test(EmpA_t$'2011',EmpA_t$'2012', paired = T)
 wilcox.test(EmpA_t$'2012',EmpA_t$'2013', paired = T)
-############################################# WORK HERE ##########################
-# Let's do plots to support the above wilcoxan tests
+
+# Plots to support the above wilcoxan tests
 par(mfrow = c(2,2))
-plot(as.numeric(stu_hrs10),type='l')
-plot(as.numeric(stu_hrs11),type='l')
-plot(as.numeric(stu_hrs12),type='l')
-plot(as.numeric(stu_hrs13),type='l')
+plot(as.numeric(stu_hrs10),type='l', ylab =c('EmpA Fetches'),xlab = c('Clock Hour'), main = c('Fetch vs Hour 2010'),ylim = c(0,70))
+plot(as.numeric(stu_hrs11),type='l', ylab =c('EmpA Fetches'),xlab = c('Clock Hour'), main = c('Fetch vs Hour 2011'),ylim = c(0,70))
+plot(as.numeric(stu_hrs12),type='l', ylab =c('EmpA Fetches'),xlab = c('Clock Hour'), main = c('Fetch vs Hour 2012'),ylim = c(0,70))
+plot(as.numeric(stu_hrs13),type='l', ylab =c('EmpA Fetches'),xlab = c('Clock Hour'), main = c('Fetch vs Hour 2013'),ylim = c(0,70))
 
 # NOTE: There exists a significant difference between 2012 and 2013, but not between other years
+
+# Summary stats for stu's hours
 
 sum(hours_mat$'25876')
 summary(hours_mat$'25876')
 hours_mat$'25876'
+
 # For group
 plot(colSums(hours_mat),ylim = c(0,2500))
 par(mfrow=c(1,1))

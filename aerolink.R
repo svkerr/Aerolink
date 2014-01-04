@@ -60,6 +60,7 @@ stu_hrs11 <- stu11[2:25]
 stu_hrs12 <- stu12[2:25]
 stu_hrs13 <- stu13[2:25]
 
+############################### This step may not be required.......
 stu_hrs10_numeric <- as.numeric(stu_hrs10)
 stu_hrs11_numeric <- as.numeric(stu_hrs11)
 stu_hrs12_numeric <- as.numeric(stu_hrs12)
@@ -269,8 +270,6 @@ hist(log10(EmpB_fetch_times_diff),freq=FALSE, ylim = c(0,0.4))
 nrow(fetch2010)
 
 ### Now get numerical matrix, remove badges and transpose
-hours <- subset(fetch2,select = c(V2:V25) )
-
 # Get pure numerical df
 hours2010 <- subset(fetch2010, select = c(V2:V25) )
 hours2011 <- subset(fetch2011, select = c(V2:V25) )
@@ -279,7 +278,6 @@ hours2013 <- subset(fetch2013, select = c(V2:V25) )
 hours2014 <- subset(fetch2014, select = c(V2:V25) )
 
 # transpose df so that 24 hours are observations (rows)
-hours_t <- data.frame(t(hours))
 hours2010_t <- data.frame(t(hours2010))
 hours2011_t <- data.frame(t(hours2011))
 hours2012_t <- data.frame(t(hours2012))
@@ -288,8 +286,6 @@ hours2014_t <- data.frame(t(hours2014))
 hours2014_t[,1]  # test to see if transpose occured
 
 # rowbind badges so that it is the top "row" in the dataframes - to be made into col names
-hours_wb <- rbind(badges,hours_t)
-head(hours_wb)
 hours2010_rb <- rbind(badges2010,hours2010_t)
 hours2011_rb <- rbind(badges2011,hours2011_t)
 hours2012_rb <- rbind(badges2012,hours2012_t)
@@ -373,11 +369,15 @@ plot(as.numeric(stu_hrs13),type='l', ylab =c('EmpA Fetches'),xlab = c('Clock Hou
 
 # NOTE: There exists a significant difference between 2012 and 2013, but not between other years
 
-# Summary stats for stu's hours
+################################## Analysis of daily_2010 dataset ##################################################
+daily_nobadge <- subset(daily_2010, select = c(V2:V366) )
+daily_badge <- subset(daily_2010, select = c(V1))
 
-sum(hours_mat$'25876')
-summary(hours_mat$'25876')
-hours_mat$'25876'
+
+
+
+
+#################################################################################################################
 
 # For group
 plot(colSums(hours_mat),ylim = c(0,2500))
